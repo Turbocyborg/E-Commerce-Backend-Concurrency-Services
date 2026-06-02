@@ -1,16 +1,19 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+# from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
-from app.routers import auth_router, product_router, checkout_router
 
-# optionally create database tables immediately at startup (redundant but safe if not using Alembic)
-# Base.metadata.create_all(bind=engine)
+# Standard FastAPI Import Style:
+from app.routers.auth import router as auth_router
+from app.routers.product import router as product_router
+from app.routers.checkout import router as checkout_router
 
 app = FastAPI(
     title="E-Commerce Backend & Concurrency Services",
     description="Engineered using FastAPI, PostgreSQL, SQLAlchemy, and row-level pessimistic locking.",
     version="1.0.0"
 )
+
+Base.metadata.create_all(bind=engine)
 
 # CORS for web integrations (replace * with secure origins in production)
 # app.add_middleware(
@@ -21,10 +24,10 @@ app = FastAPI(
 #     allow_headers=["*"],
 # )
 
-# Standard API Routers
-app.include_router(auth_router.router, prefix="/api")
-app.include_router(product_router.router, prefix="/api")
-app.include_router(checkout_router.router, prefix="/api")
+# standard API Routers
+app.include_router(auth_router, prefix="/api")
+app.include_router(product_router, prefix="/api")
+app.include_router(checkout_router, prefix="/api")
 
 @app.get("/", tags=["Root"])
 def root_status():

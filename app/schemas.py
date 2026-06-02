@@ -8,7 +8,10 @@ class UserBase(BaseModel):
     email: EmailStr
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=6, description="Minimum 6 character secure password")
+    password: str = Field(
+        min_length=6,
+        max_length=72,
+        description="Minimum 6 character secure password")
     role: Optional[UserRole] = UserRole.CUSTOMER
 
 class UserResponse(UserBase):
