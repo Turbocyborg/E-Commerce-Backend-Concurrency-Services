@@ -30,9 +30,9 @@ Base = declarative_base()
 def get_db():
     db = SessionLocal()
     try:
-        yield db
+        yield db#creates db, pauses, and hand it over to route
     finally:
-        db.close() # ensures connection is returned to the pool even during errors
+        db.close() # cleanup guaranteed:ensures connection is returned to the pool even during errors
 
-def create_table():
-    Base.metadata.create_all(bind=engine)
+# def create_table():
+#     Base.metadata.create_all(bind=engine)
