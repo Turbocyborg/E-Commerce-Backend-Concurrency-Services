@@ -118,7 +118,7 @@ def update_inventory(
     }
 
 #Post reviews (public/customer)
-@router.post("/{product_id}", status_code=status.HTTP_201_CREATED)
+@router.post("/{product_id}/reviews", status_code=status.HTTP_201_CREATED)
 def create_review(
     product_id: int, #Id from URL
     review_in:CreateReview, # Grab JSON body(rating & comment)
