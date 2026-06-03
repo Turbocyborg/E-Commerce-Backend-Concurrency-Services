@@ -4,8 +4,9 @@ from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 from app.database import get_db
-from app.models import Product, Inventory, UserRole
-from app.auth import RoleChecker
+from app.models import Product, Inventory, UserRole, Review, User
+from app.auth import RoleChecker, get_current_user
+from app.schemas import CreateReview
 
 router = APIRouter(prefix="/products", tags=["Products & Inventory"])
 
@@ -114,4 +115,51 @@ def update_inventory(
     return {
         "message": "Inventory successfully updated", 
         "new_total_stock": inventory.stock
+    }
+
+#Post reviews (public/customer)
+@router.post("/{product_id}", status_code=status.HTTP_201_CREATED)
+def create_review(
+    product_id: int, #Id from URL
+    review_in:CreateReview, # Grab JSON body(rating & comment)
+    db: Session = Depends(get_db), # database session
+    curr_user: User=Depends(get_current_user) #logged-in user
+):
+    """Add review to the product"""
+    #1. check if product exist
+    curr_product=db.query(Product).filter(Product.id==product_id).first()
+    if not curr_product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found"
+        )
+    
+    #1.5. if already reviewed (optional)
+
+    # existing_review=db.query(Review).filter(
+    #     Review.product_id==product_id,
+    #     Review.user_id==curr_user.id
+    # ).first()
+
+    # if existing_review:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail="You have already reviewed this product.")
+
+    #2. create the review object
+    new_review=Review(
+        product_id=product_id,
+        user_id=curr_user.id, # got securely from jwt token!
+        rating=review_in.rating,
+        comment=review_in.comment
+    )
+
+    #3. save to database
+    db.add(new_review)
+    db.commit()
+    db.refresh(new_review) #refresh to get generated review_id and created_at
+
+    return {
+        "message": "Review added successfully",
+        "review_id": new_review.id
     }

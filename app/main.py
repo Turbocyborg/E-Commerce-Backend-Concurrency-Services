@@ -13,7 +13,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 # CORS for web integrations (replace * with secure origins in production)
 # app.add_middleware(

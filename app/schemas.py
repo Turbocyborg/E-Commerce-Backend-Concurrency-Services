@@ -61,3 +61,10 @@ class CartItemResponse(BaseModel):
 # inventory updates
 class InventoryUpdate(BaseModel):
     stock: int = Field(..., ge=0, description="Set absolute stock value")
+
+#create reviews
+class CreateReview(BaseModel):
+    product_id: int
+    #validation
+    rating: int = Field(..., ge=1, le=5, description="Rating must be between 1 and 5 stars")
+    comment: Optional[str]=None

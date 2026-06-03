@@ -20,6 +20,7 @@ class User(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
+    review=relationship("Review", back_populates="user", cascade="all, delete-orphan")
     orders = relationship("Order", back_populates="user")
     cart_items = relationship("CartItem", back_populates="user", cascade="all, delete-orphan")
 
@@ -93,4 +94,19 @@ class OrderItem(Base):
 
     # Relationships
     order = relationship("Order", back_populates="items")
+    product = relationship("Product")
+
+#reviews table schema
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id= Column(Integer, primary_key=True, index=True)
+    product_id=Column(Integer, ForeignKey("products.id"), nullable=False)
+    user_id=Column(Integer, ForeignKey("users.id"), nullable=False)
+    rating=Column(Integer, nullable=False)#validation in pydantic! i.e., schema
+    comment=Column(String)
+    created_at=Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    #relationships back to parent tables!
+    user = relationship("User", back_populates="review")
     product = relationship("Product")
