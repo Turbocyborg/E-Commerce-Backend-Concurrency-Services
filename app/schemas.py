@@ -36,9 +36,15 @@ class ProductBase(BaseModel):
 class ProductCreate(ProductBase):
     initial_stock: int = Field(0, ge=0, description="Initial inventory amount")
 
+class ReviewResponse(BaseModel):
+    rating:int
+    comment: str | None=None
+
 class ProductResponse(ProductBase):
     id: int
     created_at: datetime
+    stock: int
+    reviews: List[ReviewResponse] = []
 
     class Config:
         from_attributes = True

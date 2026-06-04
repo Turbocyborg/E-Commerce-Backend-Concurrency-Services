@@ -20,7 +20,7 @@ class User(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
-    review=relationship("Review", back_populates="user", cascade="all, delete-orphan")
+    reviews=relationship("Review", back_populates="user", cascade="all, delete-orphan")
     orders = relationship("Order", back_populates="user")
     cart_items = relationship("CartItem", back_populates="user", cascade="all, delete-orphan")
 
@@ -35,7 +35,10 @@ class Product(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
+    reviews=relationship("Review", back_populates="product", cascade="all, delete-orphan")
     inventory = relationship("Inventory", back_populates="product", uselist=False, cascade="all, delete-orphan")
+    order_items = relationship("OrderItem", back_populates="product")
+    cart_items = relationship("CartItem", back_populates="product")
 
 #invetory schema
 class Inventory(Base):
@@ -60,7 +63,7 @@ class CartItem(Base):
 
     # Relationships
     user = relationship("User", back_populates="cart_items")
-    product = relationship("Product")
+    product = relationship("Product", back_populates="cart_items")
 
 
 class OrderStatus(str, enum.Enum):
@@ -94,7 +97,7 @@ class OrderItem(Base):
 
     # Relationships
     order = relationship("Order", back_populates="items")
-    product = relationship("Product")
+    product = relationship("Product", back_populates="order_items")
 
 #reviews table schema
 class Review(Base):
@@ -108,5 +111,5 @@ class Review(Base):
     created_at=Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     #relationships back to parent tables!
-    user = relationship("User", back_populates="review")
-    product = relationship("Product")
+    user = relationship("User", back_populates="reviews")
+    product = relationship("Product", back_populates="reviews")

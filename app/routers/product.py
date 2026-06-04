@@ -6,27 +6,9 @@ from typing import List, Optional
 from app.database import get_db
 from app.models import Product, Inventory, UserRole, Review, User
 from app.auth import RoleChecker, get_current_user
-from app.schemas import CreateReview
+from app.schemas import CreateReview, ProductResponse, ProductCreate
 
 router = APIRouter(prefix="/products", tags=["Products & Inventory"])
-
-# ==========================================
-# pydantic schemas (Input/Output Validation)
-# ==========================================
-class ProductCreate(BaseModel):
-    name: str
-    description: Optional[str] = None
-    price: float
-    initial_stock: int = 0
-
-class ProductResponse(BaseModel):
-    id: int
-    name: str
-    description: Optional[str] = None
-    price: float
-    stock: int
-    
-    model_config = ConfigDict(from_attributes=True)
 
 # ==========================================
 # routes
@@ -37,7 +19,11 @@ class ProductResponse(BaseModel):
 @router.get("/", response_model=List[ProductResponse])
 def get_all_products(db: Session = Depends(get_db)):
     """Fetch all products and their current inventory stock."""
-    products = db.query(Product).options(joinedload(Product.inventory)).all()
+    products = db.query(Product).options(
+        joinedload(Product.inventory),
+        joinedload(Product.reviews)
+        ).all()
+    
     result = []
     
     for p in products:
@@ -46,7 +32,15 @@ def get_all_products(db: Session = Depends(get_db)):
             "name": p.name,
             "description": p.description,
             "price": p.price,
-            "stock": p.inventory.stock if p.inventory else 0
+            "created_at":p.created_at,
+            "stock": p.inventory.stock if p.inventory else 0,
+            "reviews":[
+                {
+                    "rating": r.rating,
+                    "comment": r.comment
+                }
+                for r in p.reviews
+            ]
         })
     return result
 
@@ -136,15 +130,15 @@ def create_review(
     
     #1.5. if already reviewed (optional)
 
-    # existing_review=db.query(Review).filter(
-    #     Review.product_id==product_id,
-    #     Review.user_id==curr_user.id
-    # ).first()
+    existing_review=db.query(Review).filter(
+        Review.product_id==product_id,
+        Review.user_id==curr_user.id
+    ).first()
 
-    # if existing_review:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="You have already reviewed this product.")
+    if existing_review:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You have already reviewed this product.")
 
     #2. create the review object
     new_review=Review(
