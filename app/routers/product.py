@@ -157,3 +157,16 @@ def create_review(
         "message": "Review added successfully",
         "review_id": new_review.id
     }
+
+#Delete Product
+@router.delete("/{p_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove(p_id, db: Session = Depends(get_db)):
+    prod=db.get(Product,p_id)
+    if not prod:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with id:{p_id} not found",
+        )
+    db.delete(prod)
+    db.commit()
+    return status.HTTP_204_NO_CONTENT
