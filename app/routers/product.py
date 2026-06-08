@@ -91,26 +91,34 @@ def update_inventory(
     current_admin = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """Admin endpoint to add or remove stock from the warehouse."""
-    inventory = db.query(Inventory).filter(Inventory.product_id == product_id).first()
-    
-    if not inventory:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Inventory record not found for this product"
+    try:
+        inventory = (db.query(Inventory)
+                    .filter(Inventory.product_id == product_id)
+                    .with_for_update()
+                    .first()
         )
-    
-    if inventory.stock + added_stock < 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Insufficient stock"
-        )
-    inventory.stock += added_stock
-    db.commit()
-    
-    return {
-        "message": "Inventory successfully updated", 
-        "new_total_stock": inventory.stock
-    }
+        if not inventory:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Inventory record not found for this product"
+            )
+        
+        if inventory.stock + added_stock < 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Insufficient stock"
+            )
+        inventory.stock += added_stock
+        db.commit()
+        db.refresh(inventory)
+        
+        return {
+            "message": "Inventory successfully updated", 
+            "new_total_stock": inventory.stock
+        }
+    except Exception:
+        db.rollback()
+        raise
 
 #Post reviews (public/customer)
 @router.post("/{product_id}/reviews", status_code=status.HTTP_201_CREATED)
