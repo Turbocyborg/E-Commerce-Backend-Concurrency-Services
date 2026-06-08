@@ -6,7 +6,7 @@ from alembic import context
 
 # 1. IMPORT SECURE ENGINE MODELS AND DECLARATIVE BASE
 from app.database import Base, SQLALCHEMY_DATABASE_URL
-from app.models import User, Product, Inventory, CartItem, Order, OrderItem, Review
+from app.models import User, Product, Inventory, CartItem, Order, OrderItem, Review, Category
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
